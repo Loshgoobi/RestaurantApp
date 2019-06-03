@@ -23,6 +23,9 @@
 package com.loshgoobi.restaurantfinder
 
 import android.os.Bundle
+import android.support.design.widget.BottomNavigationView
+import android.support.v4.app.Fragment
+import android.support.v7.app.ActionBar
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
@@ -34,119 +37,53 @@ import kotlinx.android.synthetic.main.activity_main.*
 import java.io.IOException
 import java.util.*
 
-class MainActivity : AppCompatActivity(), ImageRequester.ImageRequesterResponse {
+class MainActivity : AppCompatActivity() {
 
-  private var photosList: ArrayList<Photo> = ArrayList()
-  private lateinit var imageRequester: ImageRequester
-  private lateinit var linearLayoutManager: LinearLayoutManager
-  private lateinit var adapter: RecyclerAdapter
-  private lateinit var gridLayoutManager: GridLayoutManager
-
-  private val lastVisibleItemPosition: Int
-    get() = if (recyclerView.layoutManager == linearLayoutManager) {
-      linearLayoutManager.findLastVisibleItemPosition()
-    } else {
-      gridLayoutManager.findLastVisibleItemPosition()
-    }
+  //private lateinit var toolbar: ActionBar
 
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_main)
-    linearLayoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
-    recyclerView.layoutManager = linearLayoutManager
-    adapter = RecyclerAdapter(photosList)
-    recyclerView.adapter = adapter
-    setRecyclerViewScrollListener()
-    gridLayoutManager = GridLayoutManager(this, 2)
-    setRecyclerViewItemTouchListener()
+
+    navigationView.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener)
 
 
-    imageRequester = ImageRequester(this)
+//    toolbar = supportActionBar!!
+//    val bottomNavigation: BottomNavigationView = findViewById(R.id.navigationView)
+
+
   }
 
-  private fun changeLayoutManager() {
-    if (recyclerView.layoutManager == linearLayoutManager) {
-      //1
-      recyclerView.layoutManager = gridLayoutManager
-      //2
-      if (photosList.size == 1) {
-        requestPhoto()
+  private val mOnNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
+    when (item.itemId) {
+      R.id.navigation_home -> {
+        //message.setText(R.string.title_home)
+        val recyclerFragment = RecyclerFragment.newInstance()
+        openFragment(recyclerFragment)
+        return@OnNavigationItemSelectedListener true
       }
-    } else {
-      //3
-      recyclerView.layoutManager = linearLayoutManager
-    }
-  }
-
-  private fun setRecyclerViewScrollListener() {
-    recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-      override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-        super.onScrollStateChanged(recyclerView, newState)
-        val totalItemCount = recyclerView.layoutManager!!.itemCount
-        if (!imageRequester.isLoadingData && totalItemCount == lastVisibleItemPosition + 1) {
-          requestPhoto()
-        }
+      R.id.navigation_search -> {
+        //message.setText(R.string.title_dashboard)
+        val searchRecycle = SearchRecycle.newInstance()
+        openFragment(searchRecycle)
+        return@OnNavigationItemSelectedListener true
       }
-    })
-  }
-
-  private fun setRecyclerViewItemTouchListener() {
-
-    //1
-    val itemTouchCallback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
-      override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, viewHolder1: RecyclerView.ViewHolder): Boolean {
-        //2
-        return false
-      }
-
-      override fun onSwiped(viewHolder: RecyclerView.ViewHolder, swipeDir: Int) {
-        //3
-        val position = viewHolder.adapterPosition
-        photosList.removeAt(position)
-        recyclerView.adapter!!.notifyItemRemoved(position)
+      R.id.navigation_notifications -> {
+        //message.setText(R.string.title_notifications)
+        return@OnNavigationItemSelectedListener true
       }
     }
-
-    //4
-    val itemTouchHelper = ItemTouchHelper(itemTouchCallback)
-    itemTouchHelper.attachToRecyclerView(recyclerView)
+    false
   }
 
-  override fun onCreateOptionsMenu(menu: Menu): Boolean {
-    menuInflater.inflate(R.menu.menu_main, menu)
-    return true
+  private fun openFragment(fragment: Fragment) {
+    val transaction = supportFragmentManager.beginTransaction()
+    transaction.replace(R.id.container, fragment)
+    transaction.addToBackStack(null)
+    transaction.commit()
   }
 
-  override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    if (item.itemId == R.id.action_change_recycler_manager) {
-      changeLayoutManager()
-      return true
-    }
-    return super.onOptionsItemSelected(item)
-  }
 
-  override fun onStart() {
-    super.onStart()
-    if (photosList.size == 0) {
-      requestPhoto()
-    }
-
-  }
-
-  private fun requestPhoto() {
-    try {
-      imageRequester.getPhoto()
-    } catch (e: IOException) {
-      e.printStackTrace()
-    }
-
-  }
-
-  override fun receivedNewPhoto(newPhoto: Photo) {
-    runOnUiThread {
-      photosList.add(newPhoto)
-      adapter.notifyItemInserted(photosList.size-1)
-    }
-  }
 }
+
