@@ -76,6 +76,7 @@ class MainActivity : AppCompatActivity(), ImageRequester.ImageRequesterResponse 
     } else {
       //3
       recyclerView.layoutManager = linearLayoutManager
+
     }
   }
 

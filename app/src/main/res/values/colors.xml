@@ -3,6 +3,6 @@
   <color name="colorPrimary">#368330</color>
   <color name="colorPrimaryDark">#125C16</color>
   <color name="colorAccent">#125729</color>
-
+  <color name="colorCallButton">#05972D</color>
   <color name="black_overlay">#66000000</color>
 </resources>
